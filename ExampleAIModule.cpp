@@ -88,9 +88,12 @@ void ExampleAIModule::onFrame()
 
     if ( u->getType().isWorker() ){
       if ( u->isIdle()  || u->isGatheringMinerals()){
-		  if ((Barracks_count < 3 || Broodwar->self()->minerals() >= 500) && (Broodwar->self()->minerals() >= UnitTypes::Terran_Barracks.mineralPrice())){
+		  static int barrack_timer = 0;
+		  if ((Barracks_count < 3 || Broodwar->self()->minerals() >= 500) && (Broodwar->self()->minerals() >= UnitTypes::Terran_Barracks.mineralPrice()) && barrack_timer + 100 < Broodwar->getFrameCount()){
+
 			  TilePosition buildPosition = Broodwar->getBuildLocation(BWAPI::UnitTypes::Terran_Barracks, u->getTilePosition());
 			  u->build(UnitTypes::Terran_Barracks, buildPosition);
+			  barrack_timer = Broodwar->getFrameCount();
 			  Barracks_count += 1;
 			  done = true;
 		  }
@@ -122,7 +125,7 @@ void ExampleAIModule::onFrame()
         static int lastChecked = 0;
 		
 		if (  Broodwar->self()->supplyTotal() - Broodwar->self()->supplyUsed() <= 1 &&
-              lastChecked + 400 < Broodwar->getFrameCount() &&
+              lastChecked + 100 < Broodwar->getFrameCount() &&
               Broodwar->self()->incompleteUnitCount(supplyProviderType) == 0 &&
 			  Broodwar->self()->minerals() >= 100)
         {
