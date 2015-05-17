@@ -129,7 +129,7 @@ void ExampleAIModule::onFrame()
     {
 
       // Order the depot to construct more workers! But only when it is idle.
-      if ( u->isIdle() && !u->train(u->getType().getRace().getWorker()) )
+		if (u->isIdle() && Broodwar->self()->minerals() >= 50 && !u->train(u->getType().getRace().getWorker()))
       {
         // If that fails, draw the error at the location so that you can visibly see what went wrong!
         // However, drawing the error once will only appear for a single frame
@@ -148,7 +148,7 @@ void ExampleAIModule::onFrame()
         if (  lastErr == Errors::Insufficient_Supply &&
               lastChecked + 400 < Broodwar->getFrameCount() &&
               Broodwar->self()->incompleteUnitCount(supplyProviderType) == 0 &&
-			  Broodwar->self()->minerals() > 100)
+			  Broodwar->self()->minerals() >= 100)
         {
           lastChecked = Broodwar->getFrameCount();
 
@@ -188,7 +188,18 @@ void ExampleAIModule::onFrame()
       } // closure: failed to train idle unit
 
     }
-
+	if ((u->getType() == UnitTypes::Terran_Marine) && u->isIdle())
+	{
+		Unit closestEnemy = NULL;
+		for (auto &e : Broodwar->enemy()->getUnits())
+		{
+			if ((closestEnemy == NULL) || (e->getDistance(u) < closestEnemy->getDistance(u)))
+			{
+				closestEnemy = e;
+			}
+		}
+		u->attack(closestEnemy, false);
+	}
   } // closure: unit iterator
 }
 
