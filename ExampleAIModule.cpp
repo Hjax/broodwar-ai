@@ -64,6 +64,7 @@ void ExampleAIModule::onEnd(bool isWinner)
 
 void ExampleAIModule::onFrame()
 {
+  bool done = false;
   Broodwar->drawTextScreen(200, 0,  "FPS: %d", Broodwar->getFPS() );
   Broodwar->drawTextScreen(200, 20, "Average FPS: %f", Broodwar->getAverageFPS() );
   if ( Broodwar->isReplay() || Broodwar->isPaused() || !Broodwar->self() )
@@ -86,65 +87,53 @@ void ExampleAIModule::onFrame()
 
 
     if ( u->getType().isWorker() ){
-      if ( u->isIdle() ){
-		  if (u->isIdle || u->isGatheringMinerals()){
-			  if ((Barracks_count < 3 || Broodwar->self()->minerals() >= 500) && (Broodwar->self()->minerals() >= UnitTypes::Terran_Barracks.mineralPrice())){
+      if ( u->isIdle()  || u->isGatheringMinerals()){
+		  if ((Barracks_count < 3 || Broodwar->self()->minerals() >= 500) && (Broodwar->self()->minerals() >= UnitTypes::Terran_Barracks.mineralPrice())){
 			  TilePosition buildPosition = Broodwar->getBuildLocation(BWAPI::UnitTypes::Terran_Barracks, u->getTilePosition());
 			  u->build(UnitTypes::Terran_Barracks, buildPosition);
 			  Barracks_count += 1;
-		    }
+			  done = true;
 		  }
         // Order workers carrying a resource to return them to the center,
         // otherwise find a mineral patch to harvest.
-        if ( u->isCarryingGas() || u->isCarryingMinerals() )
-        {
-          u->returnCargo();
-        }
-        else if ( !u->getPowerUp() )  // The worker cannot harvest anything if it
-        {                             // is carrying a powerup such as a flag
-          // Harvest from the nearest mineral patch or gas refinery
-          if ( !u->gather( u->getClosestUnit( IsMineralField || IsRefinery )) )
+		if (u->isIdle()){
+          if ( u->isCarryingGas() || u->isCarryingMinerals() )
           {
-            // If the call fails, then print the last error message
-            Broodwar << Broodwar->getLastError() << std::endl;
+            u->returnCargo();
           }
-
+		  else if (!u->getPowerUp())  // The worker cannot harvest anything if it
+		  {                             // is carrying a powerup such as a flag
+			  // Harvest from the nearest mineral patch or gas refinery
+			  if (!u->gather(u->getClosestUnit(IsMineralField || IsRefinery)))
+			  {
+				  // If the call fails, then print the last error message
+				  Broodwar << Broodwar->getLastError() << std::endl;
+			  }
+		  }
         } // closure: has no powerup
       } // closure: if idle
 
     }
-    else if ( u->getType().isResourceDepot() ) // A resource depot is a Command Center, Nexus, or Hatchery
+    else if ( u->getType().isResourceDepot() )
     {
-
-      // Order the depot to construct more workers! But only when it is idle.
 		if (u->isIdle() && Broodwar->self()->minerals() >= 50 && !u->train(u->getType().getRace().getWorker()))
       {
-        // If that fails, draw the error at the location so that you can visibly see what went wrong!
-        // However, drawing the error once will only appear for a single frame
-        // so create an event that keeps it on the screen for some frames
-        Position pos = u->getPosition();
+        Position pos = u->getPosition(); // draw errors
         Error lastErr = Broodwar->getLastError();
         Broodwar->registerEvent([pos,lastErr](Game*){ Broodwar->drawTextMap(pos, "%c%s", Text::White, lastErr.c_str()); },   // action
-                                nullptr,    // condition
-                                Broodwar->getLatencyFrames());  // frames to run
-
-        // Retrieve the supply provider type in the case that we have run out of supplies
+                                nullptr,
+                                Broodwar->getLatencyFrames());
         UnitType supplyProviderType = u->getType().getRace().getSupplyProvider();
         static int lastChecked = 0;
-
-        // If we are supply blocked and haven't tried constructing more recently
         if (  lastErr == Errors::Insufficient_Supply &&
               lastChecked + 400 < Broodwar->getFrameCount() &&
               Broodwar->self()->incompleteUnitCount(supplyProviderType) == 0 &&
 			  Broodwar->self()->minerals() >= 100)
         {
           lastChecked = Broodwar->getFrameCount();
-
-          // Retrieve a unit that is capable of constructing the supply needed
           Unit supplyBuilder = u->getClosestUnit(  GetType == supplyProviderType.whatBuilds().first &&
                                                     (IsIdle || IsGatheringMinerals) &&
                                                     IsOwned);
-          // If a unit was found
           if ( supplyBuilder )
           {
             if ( supplyProviderType.isBuilding() )
@@ -152,7 +141,6 @@ void ExampleAIModule::onFrame()
               TilePosition targetBuildLocation = Broodwar->getBuildLocation(supplyProviderType, supplyBuilder->getTilePosition());
               if ( targetBuildLocation )
               {
-                // Register an event that draws the target build location
                 Broodwar->registerEvent([targetBuildLocation,supplyProviderType](Game*)
                                         {
                                           Broodwar->drawBoxMap( Position(targetBuildLocation),
@@ -162,13 +150,11 @@ void ExampleAIModule::onFrame()
                                         nullptr,  // condition
                                         supplyProviderType.buildTime() + 100 );  // frames to run
 
-                // Order the builder to construct the supply structure
                 supplyBuilder->build( supplyProviderType, targetBuildLocation );
               }
             }
             else
             {
-              // Train the supply provider (Overlord) if the provider is not a structure
               supplyBuilder->train( supplyProviderType );
             }
           } // closure: supplyBuilder is valid
