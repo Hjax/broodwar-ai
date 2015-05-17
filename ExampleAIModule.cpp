@@ -121,7 +121,7 @@ void ExampleAIModule::onFrame()
         UnitType supplyProviderType = u->getType().getRace().getSupplyProvider();
         static int lastChecked = 0;
 		
-		if (  Broodwar->self()->supplyTotal - Broodwar->self()->supplyUsed <= 1 &&
+		if (  Broodwar->self()->supplyTotal() - Broodwar->self()->supplyUsed() <= 1 &&
               lastChecked + 400 < Broodwar->getFrameCount() &&
               Broodwar->self()->incompleteUnitCount(supplyProviderType) == 0 &&
 			  Broodwar->self()->minerals() >= 100)
