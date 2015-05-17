@@ -64,51 +64,36 @@ void ExampleAIModule::onEnd(bool isWinner)
 
 void ExampleAIModule::onFrame()
 {
-  // Called once every game frame
-
-  // Display the game frame rate as text in the upper left area of the screen
   Broodwar->drawTextScreen(200, 0,  "FPS: %d", Broodwar->getFPS() );
   Broodwar->drawTextScreen(200, 20, "Average FPS: %f", Broodwar->getAverageFPS() );
-
-  // Return if the game is a replay or is paused
   if ( Broodwar->isReplay() || Broodwar->isPaused() || !Broodwar->self() )
     return;
-
-  // Prevent spamming by only running our onFrame once every number of latency frames.
-  // Latency frames are the number of frames before commands are processed.
   if ( Broodwar->getFrameCount() % Broodwar->getLatencyFrames() != 0 )
     return;
-
-  // Iterate through all the units that we own
   for (auto &u : Broodwar->self()->getUnits())
   {
-    // Ignore the unit if it no longer exists
-    // Make sure to include this block when handling any Unit pointer!
     if ( !u->exists() )
       continue;
 
-    // Ignore the unit if it has one of the following status ailments
     if ( u->isLockedDown() || u->isMaelstrommed() || u->isStasised() )
       continue;
 
-    // Ignore the unit if it is in one of the following states
     if ( u->isLoaded() || !u->isPowered() || u->isStuck() )
       continue;
 
-    // Ignore the unit if it is incomplete or busy constructing
     if ( !u->isCompleted() || u->isConstructing() )
       continue;
 
 
-    // Finally make the unit do some stuff!
-
-
-    // If the unit is a worker unit
-    if ( u->getType().isWorker() )
-    {
-      // if our worker is idle
-      if ( u->isIdle() )
-      {
+    if ( u->getType().isWorker() ){
+      if ( u->isIdle() ){
+		  if (u->isIdle || u->isGatheringMinerals()){
+			  if ((Barracks_count < 3 || Broodwar->self()->minerals() >= 500) && (Broodwar->self()->minerals() >= UnitTypes::Terran_Barracks.mineralPrice())){
+			  TilePosition buildPosition = Broodwar->getBuildLocation(BWAPI::UnitTypes::Terran_Barracks, u->getTilePosition());
+			  u->build(UnitTypes::Terran_Barracks, buildPosition);
+			  Barracks_count += 1;
+		    }
+		  }
         // Order workers carrying a resource to return them to the center,
         // otherwise find a mineral patch to harvest.
         if ( u->isCarryingGas() || u->isCarryingMinerals() )
@@ -128,13 +113,6 @@ void ExampleAIModule::onFrame()
       } // closure: if idle
 
     }
-	else if ((Barracks_count < 3) && (Broodwar->self()->minerals() >= UnitTypes::Terran_Barracks.mineralPrice()))
-	{
-		//find a location for Barracks and construct it
-		TilePosition buildPosition = Broodwar->getBuildLocation(BWAPI::UnitTypes::Terran_Barracks, u->getTilePosition());
-		u->build(UnitTypes::Terran_Barracks, buildPosition);
-		Barracks_count += 1;
-	}
     else if ( u->getType().isResourceDepot() ) // A resource depot is a Command Center, Nexus, or Hatchery
     {
 
