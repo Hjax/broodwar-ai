@@ -11,6 +11,7 @@ void ExampleAIModule::onStart()
 
   // init some variables
   Barracks_count = 0;
+  supply_inprogress = 0;
 
   // Print the map name.
   // BWAPI returns std::string when retrieving a string, don't forget to add .c_str() when printing!
@@ -66,6 +67,7 @@ void ExampleAIModule::onFrame()
 {
   bool done = false;
   Broodwar->drawTextScreen(200, 0,  "FPS: %d", Broodwar->getFPS() );
+  Broodwar->drawTextScreen(200, 40, "Barracks: %d", Barracks_count);
   Broodwar->drawTextScreen(200, 20, "Average FPS: %f", Broodwar->getAverageFPS() );
   if ( Broodwar->isReplay() || Broodwar->isPaused() || !Broodwar->self() )
     return;
@@ -85,15 +87,16 @@ void ExampleAIModule::onFrame()
     if ( !u->isCompleted() || u->isConstructing() )
       continue;
 
-
     if ( u->getType().isWorker() ){
       if ( u->isIdle()  || u->isGatheringMinerals()){
-		  static int barrack_timer = 0;
-		  if ((Barracks_count < 3 || Broodwar->self()->minerals() >= 500) && (Broodwar->self()->minerals() >= UnitTypes::Terran_Barracks.mineralPrice()) && barrack_timer + 100 < Broodwar->getFrameCount()){
-
+		  static int lastChecked = 0;
+		  if ((Barracks_count < 3 || Broodwar->self()->minerals() >= 500) && 
+			  (Broodwar->self()->minerals() >= UnitTypes::Terran_Barracks.mineralPrice()) &&
+			  lastChecked + 400 < Broodwar->getFrameCount())
+		  {
+			  lastChecked = Broodwar->getFrameCount();
 			  TilePosition buildPosition = Broodwar->getBuildLocation(BWAPI::UnitTypes::Terran_Barracks, u->getTilePosition());
 			  u->build(UnitTypes::Terran_Barracks, buildPosition);
-			  barrack_timer = Broodwar->getFrameCount();
 			  Barracks_count += 1;
 			  done = true;
 		  }
@@ -122,14 +125,11 @@ void ExampleAIModule::onFrame()
                                 nullptr,
                                 Broodwar->getLatencyFrames());
         UnitType supplyProviderType = u->getType().getRace().getSupplyProvider();
-        static int lastChecked = 0;
 		
-		if (  Broodwar->self()->supplyTotal() - Broodwar->self()->supplyUsed() <= 1 &&
-              lastChecked + 100 < Broodwar->getFrameCount() &&
+		if (  supply_inprogress * supplyProviderType.supplyProvided() - Broodwar->self()->supplyUsed() <= 2 &&
               Broodwar->self()->incompleteUnitCount(supplyProviderType) == 0 &&
 			  Broodwar->self()->minerals() >= 100)
         {
-          lastChecked = Broodwar->getFrameCount();
           Unit supplyBuilder = u->getClosestUnit(  GetType == supplyProviderType.whatBuilds().first &&
                                                     (IsIdle || IsGatheringMinerals) &&
                                                     IsOwned);
@@ -150,6 +150,7 @@ void ExampleAIModule::onFrame()
                                         supplyProviderType.buildTime() + 100 );  // frames to run
 
                 supplyBuilder->build( supplyProviderType, targetBuildLocation );
+				supply_inprogress += 1;
               }
             }
             else
