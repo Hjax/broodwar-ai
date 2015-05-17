@@ -68,6 +68,7 @@ void ExampleAIModule::onFrame()
   bool done = false;
   Broodwar->drawTextScreen(200, 0,  "FPS: %d", Broodwar->getFPS() );
   Broodwar->drawTextScreen(200, 40, "Barracks: %d", Barracks_count);
+  Broodwar->drawTextScreen(200, 40, "Supply: %d", Su);
   Broodwar->drawTextScreen(200, 20, "Average FPS: %f", Broodwar->getAverageFPS() );
   if ( Broodwar->isReplay() || Broodwar->isPaused() || !Broodwar->self() )
     return;
@@ -124,9 +125,9 @@ void ExampleAIModule::onFrame()
         Broodwar->registerEvent([pos,lastErr](Game*){ Broodwar->drawTextMap(pos, "%c%s", Text::White, lastErr.c_str()); },   // action
                                 nullptr,
                                 Broodwar->getLatencyFrames());
+
         UnitType supplyProviderType = u->getType().getRace().getSupplyProvider();
-		
-		if (  supply_inprogress * supplyProviderType.supplyProvided() - Broodwar->self()->supplyUsed() <= 2 &&
+		if (  (supply_inprogress * supplyProviderType.supplyProvided() + 10) - Broodwar->self()->supplyUsed() <= 2 &&
               Broodwar->self()->incompleteUnitCount(supplyProviderType) == 0 &&
 			  Broodwar->self()->minerals() >= 100)
         {
