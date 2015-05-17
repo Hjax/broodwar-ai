@@ -94,19 +94,14 @@ void ExampleAIModule::onFrame()
 			  Barracks_count += 1;
 			  done = true;
 		  }
-        // Order workers carrying a resource to return them to the center,
-        // otherwise find a mineral patch to harvest.
 		if (u->isIdle()){
           if ( u->isCarryingGas() || u->isCarryingMinerals() )
           {
             u->returnCargo();
           }
-		  else if (!u->getPowerUp())  // The worker cannot harvest anything if it
-		  {                             // is carrying a powerup such as a flag
-			  // Harvest from the nearest mineral patch or gas refinery
+		  else if (!u->getPowerUp()){
 			  if (!u->gather(u->getClosestUnit(IsMineralField || IsRefinery)))
 			  {
-				  // If the call fails, then print the last error message
 				  Broodwar << Broodwar->getLastError() << std::endl;
 			  }
 		  }
@@ -125,7 +120,8 @@ void ExampleAIModule::onFrame()
                                 Broodwar->getLatencyFrames());
         UnitType supplyProviderType = u->getType().getRace().getSupplyProvider();
         static int lastChecked = 0;
-        if (  lastErr == Errors::Insufficient_Supply &&
+		
+		if (  Broodwar->self()->supplyTotal - Broodwar->self()->supplyUsed <= 1 &&
               lastChecked + 400 < Broodwar->getFrameCount() &&
               Broodwar->self()->incompleteUnitCount(supplyProviderType) == 0 &&
 			  Broodwar->self()->minerals() >= 100)
