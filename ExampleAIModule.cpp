@@ -9,6 +9,9 @@ void ExampleAIModule::onStart()
   // Hello World!
   Broodwar->sendText("Hello world!");
 
+  // init some variables
+  Barracks_count = 0;
+
   // Print the map name.
   // BWAPI returns std::string when retrieving a string, don't forget to add .c_str() when printing!
   Broodwar << "The map is " << Broodwar->mapName() << "!" << std::endl;
@@ -17,7 +20,7 @@ void ExampleAIModule::onStart()
   Broodwar->enableFlag(Flag::UserInput);
 
   // Uncomment the following line and the bot will know about everything through the fog of war (cheat).
-  //Broodwar->enableFlag(Flag::CompleteMapInformation);
+  Broodwar->enableFlag(Flag::CompleteMapInformation);
 
   // Set the command optimization level so that common commands can be grouped
   // and reduce the bot's APM (Actions Per Minute).
@@ -125,6 +128,13 @@ void ExampleAIModule::onFrame()
       } // closure: if idle
 
     }
+	else if ((Barracks_count < 3) && (Broodwar->self()->minerals() >= UnitTypes::Terran_Barracks.mineralPrice()))
+	{
+		//find a location for Barracks and construct it
+		TilePosition buildPosition = Broodwar->getBuildLocation(BWAPI::UnitTypes::Terran_Barracks, u->getTilePosition());
+		u->build(UnitTypes::Terran_Barracks, buildPosition);
+		Barracks_count += 1;
+	}
     else if ( u->getType().isResourceDepot() ) // A resource depot is a Command Center, Nexus, or Hatchery
     {
 
@@ -188,7 +198,9 @@ void ExampleAIModule::onFrame()
       } // closure: failed to train idle unit
 
     }
-	if ((u->getType() == UnitTypes::Terran_Marine) && u->isIdle())
+
+
+	else if ((u->getType() == UnitTypes::Terran_Marine) && u->isIdle())
 	{
 		Unit closestEnemy = NULL;
 		for (auto &e : Broodwar->enemy()->getUnits())
@@ -199,6 +211,9 @@ void ExampleAIModule::onFrame()
 			}
 		}
 		u->attack(closestEnemy, false);
+	}
+	else if ((u->getType() == UnitTypes::Terran_Barracks) && u->isIdle() && Broodwar->self()->minerals() >= 50){
+		u->train(UnitTypes::Terran_Marine);
 	}
   } // closure: unit iterator
 }
