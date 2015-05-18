@@ -118,8 +118,11 @@ void ExampleAIModule::onFrame()
 			} // closure: if idle
 
 		}
-		if (u->isIdle() && free_mins >= 50 && !u->train(u->getType().getRace().getWorker()))
+		else if (u->getType() == UnitTypes::Terran_Command_Center)
 		{
+			if (u->isIdle() && free_mins >= 50){
+				u->train(u->getType().getRace().getWorker());
+			}
 			Position pos = u->getPosition(); // draw errors
 			Error lastErr = Broodwar->getLastError();
 			Broodwar->registerEvent([pos, lastErr](Game*){ Broodwar->drawTextMap(pos, "%c%s", Text::White, lastErr.c_str()); },   // action
@@ -159,26 +162,25 @@ void ExampleAIModule::onFrame()
 			} // closure: insufficient supply
 		} // closure: failed to train idle unit
 
-	}
 
 
-	else if ((u->getType() == UnitTypes::Terran_Marine) && u->isIdle())
-	{
-		Unit closestEnemy = NULL;
-		for (auto &e : Broodwar->enemy()->getUnits())
+		else if ((u->getType() == UnitTypes::Terran_Marine) && u->isIdle())
 		{
-			if ((closestEnemy == NULL) || (e->getDistance(u) < closestEnemy->getDistance(u)))
+			Unit closestEnemy = NULL;
+			for (auto &e : Broodwar->enemy()->getUnits())
 			{
-				closestEnemy = e;
+				if ((closestEnemy == NULL) || (e->getDistance(u) < closestEnemy->getDistance(u)))
+				{
+					closestEnemy = e;
+				}
 			}
+			u->attack(closestEnemy, false);
 		}
-		u->attack(closestEnemy, false);
-	}
-	else if ((u->getType() == UnitTypes::Terran_Barracks) && u->isIdle() && free_mins >= 50){
-		u->train(UnitTypes::Terran_Marine);
-		free_mins -= 50;
-	}
-} // closure: unit iterator
+		else if ((u->getType() == UnitTypes::Terran_Barracks) && u->isIdle() && free_mins >= 50){
+			u->train(UnitTypes::Terran_Marine);
+			free_mins -= 50;
+		}
+	} // closure: unit iterator
 }
 
 void ExampleAIModule::onSendText(std::string text)
