@@ -101,15 +101,6 @@ void ExampleAIModule::onFrame()
 
 		if (u->getType().isWorker()){
 			if (u->isIdle() || u->isGatheringMinerals()){
-				if ((Broodwar->self()->allUnitCount(UnitTypes::Terran_Barracks) < 3 || free_mins >= 800) &&
-					(free_mins >= UnitTypes::Terran_Barracks.mineralPrice()) &&
-					Barracks_timer + 200 < Broodwar->getFrameCount())
-				{
-					Barracks_timer = Broodwar->getFrameCount();
-					TilePosition buildPosition = Broodwar->getBuildLocation(BWAPI::UnitTypes::Terran_Barracks, u->getTilePosition());
-					u->build(UnitTypes::Terran_Barracks, buildPosition);
-					free_mins -= 150;
-				}
 				if ((Broodwar->self()->allUnitCount(UnitTypes::Terran_Command_Center) < ((scvs % 24) + 1)) &&
 					(free_mins >= UnitTypes::Terran_Command_Center.mineralPrice()) &&
 					expo_timer + 4000 < Broodwar->getFrameCount())
@@ -119,7 +110,16 @@ void ExampleAIModule::onFrame()
 					u->build(UnitTypes::Terran_Command_Center, buildPosition);
 					free_mins -= 400;
 				}
-				if (u->isIdle()){
+				else if ((Broodwar->self()->allUnitCount(UnitTypes::Terran_Barracks) < 3 || free_mins >= 800) &&
+					(free_mins >= UnitTypes::Terran_Barracks.mineralPrice()) &&
+					Barracks_timer + 200 < Broodwar->getFrameCount())
+				{
+					Barracks_timer = Broodwar->getFrameCount();
+					TilePosition buildPosition = Broodwar->getBuildLocation(BWAPI::UnitTypes::Terran_Barracks, u->getTilePosition());
+					u->build(UnitTypes::Terran_Barracks, buildPosition);
+					free_mins -= 150;
+				}
+				else if (u->isIdle()){
 					if (u->isCarryingGas() || u->isCarryingMinerals())
 					{
 						u->returnCargo();
