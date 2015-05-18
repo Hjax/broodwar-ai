@@ -77,6 +77,8 @@ void ExampleAIModule::onFrame()
 	Broodwar->drawTextScreen(200, 60, "Marines: %d", marines);
 	Broodwar->drawTextScreen(200, 80, "Workers: %d", scvs);
 	Broodwar->drawTextScreen(200, 100, "Next Depot %d", ((2 * Broodwar->self()->allUnitCount(UnitTypes::Terran_Barracks))) + 2);
+	Broodwar->drawTextScreen(100, 0, "Optimal CCs: %d", (scvs / 24) + 1);
+	
 	if (marines >= 20){
 		Broodwar->setLocalSpeed(-1);
 	}
@@ -102,6 +104,7 @@ void ExampleAIModule::onFrame()
 		if (u->getType().isWorker()){
 			if (u->isIdle() || u->isGatheringMinerals()){
 				if ((Broodwar->self()->allUnitCount(UnitTypes::Terran_Command_Center) < ((scvs % 24) + 1)) &&
+					scvs < 60 &&
 					(free_mins >= UnitTypes::Terran_Command_Center.mineralPrice()) &&
 					expo_timer + 720 < Broodwar->getFrameCount())
 				{
@@ -136,7 +139,7 @@ void ExampleAIModule::onFrame()
 		}
 		else if (u->getType() == UnitTypes::Terran_Command_Center)
 		{
-			if (u->isIdle() && free_mins >= 50 && scvs <= 30){
+			if (u->isIdle() && free_mins >= 50 && scvs < 24 * Broodwar->self()->allUnitCount(UnitTypes::Terran_Command_Center)){
 				u->train(u->getType().getRace().getWorker());
 				free_mins -= 50;
 			}
