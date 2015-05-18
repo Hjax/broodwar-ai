@@ -68,16 +68,16 @@ void ExampleAIModule::onFrame()
 	int free_mins = Broodwar->self()->minerals();
 	Broodwar->drawTextScreen(200, 0, "FPS: %d", Broodwar->getFPS());
 	Broodwar->drawTextScreen(200, 20, "Average FPS: %f", Broodwar->getAverageFPS());
-	Broodwar->drawTextScreen(200, 40, "APM: %f", Broodwar->getAPM());
+	Broodwar->drawTextScreen(200, 40, "APM: %d", Broodwar->getAPM());
+	int marines = Broodwar->self()->allUnitCount(UnitTypes::Terran_Marine);
+	int scvs = Broodwar->self()->allUnitCount(UnitTypes::Terran_SCV);
+	Broodwar->drawTextScreen(200, 60, "Marines: %d", marines);
+	Broodwar->drawTextScreen(200, 80, "Workers: %d", scvs);
+
 	if (Broodwar->isReplay() || Broodwar->isPaused() || !Broodwar->self())
 		return;
 	if (Broodwar->getFrameCount() % Broodwar->getLatencyFrames() != 0)
 		return;
-	int marines = Broodwar->self()->allUnitCount(UnitTypes::Terran_Marine);
-	int scvs = Broodwar->self()->allUnitCount(UnitTypes::Terran_SCV);
-
-	Broodwar->drawTextScreen(200, 60, "Marines: %d", marines);
-	Broodwar->drawTextScreen(200, 60, "Workers: %d", scvs);
 
 	for (auto &u : Broodwar->self()->getUnits())
 	{
@@ -127,7 +127,7 @@ void ExampleAIModule::onFrame()
 			}
 
 			UnitType supplyProviderType = u->getType().getRace().getSupplyProvider();
-			if (Broodwar->self()->supplyTotal() - Broodwar->self()->supplyUsed() <= 2 &&
+			if (Broodwar->self()->supplyTotal() - Broodwar->self()->supplyUsed() <= ((2 * Broodwar->self()->allUnitCount(UnitTypes::Terran_Barracks)) + 1) &&
 				Broodwar->self()->incompleteUnitCount(supplyProviderType) == 0 &&
 				free_mins >= 100 &&
 				Broodwar->getFrameCount() - supply_timer > 150)
