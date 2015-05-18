@@ -158,7 +158,7 @@ void ExampleAIModule::onFrame()
 		} // closure: failed to train idle unit
 
 
-		else if ((u->getType() == UnitTypes::Terran_Marine) && marines >= 20)
+		else if ((u->getType() == UnitTypes::Terran_Marine) && marines >= 10 && (!u->isAttacking() || !u->isStartingAttack()))
 		{
 			Unit closestEnemy = NULL;
 			for (auto &e : Broodwar->enemy()->getUnits())
@@ -169,8 +169,8 @@ void ExampleAIModule::onFrame()
 				}
 			}
 			
-			if (u->getDistance(closestEnemy) < 3 && u->getHitPoints() < 16){
-				u->move(u->getClosestUnit(IsResourceDepot)->getPosition());
+			if (u->getDistance(closestEnemy) < 10 && u->getHitPoints() < 16){
+				u->move(u->getClosestUnit(IsResourceDepot && IsAlly)->getPosition());
 			}
 			else {
 				u->attack(closestEnemy->getPosition(), false);
