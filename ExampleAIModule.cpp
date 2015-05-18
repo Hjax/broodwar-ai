@@ -103,7 +103,7 @@ void ExampleAIModule::onFrame()
 			if (u->isIdle() || u->isGatheringMinerals()){
 				if ((Broodwar->self()->allUnitCount(UnitTypes::Terran_Command_Center) < ((scvs % 24) + 1)) &&
 					(free_mins >= UnitTypes::Terran_Command_Center.mineralPrice()) &&
-					expo_timer + 4000 < Broodwar->getFrameCount())
+					expo_timer + 720 < Broodwar->getFrameCount())
 				{
 					expo_timer = Broodwar->getFrameCount();
 					TilePosition buildPosition = Broodwar->getBuildLocation(BWAPI::UnitTypes::Terran_Command_Center, u->getTilePosition());
