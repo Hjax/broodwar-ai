@@ -69,7 +69,7 @@ void ExampleAIModule::onFrame()
 	bool done = false;
 	Broodwar->drawTextScreen(200, 0, "FPS: %d", Broodwar->getFPS());
 	Broodwar->drawTextScreen(200, 40, "Barracks: %d", Barracks_count);
-	Broodwar->drawTextScreen(200, 40, "Supply: %d", supply_inprogress);
+	Broodwar->drawTextScreen(200, 60, "Supply: %d", supply_inprogress);
 	Broodwar->drawTextScreen(200, 20, "Average FPS: %f", Broodwar->getAverageFPS());
 	if (Broodwar->isReplay() || Broodwar->isPaused() || !Broodwar->self())
 		return;
@@ -124,14 +124,9 @@ void ExampleAIModule::onFrame()
 				u->train(u->getType().getRace().getWorker());
 				free_mins -= 50;
 			}
-			Position pos = u->getPosition(); // draw errors
-			Error lastErr = Broodwar->getLastError();
-			Broodwar->registerEvent([pos, lastErr](Game*){ Broodwar->drawTextMap(pos, "%c%s", Text::White, lastErr.c_str()); },   // action
-				nullptr,
-				Broodwar->getLatencyFrames());
 
 			UnitType supplyProviderType = u->getType().getRace().getSupplyProvider();
-			if ((supply_inprogress * supplyProviderType.supplyProvided() + 10) - Broodwar->self()->supplyUsed() <= 2 &&
+			if (((supply_inprogress * supplyProviderType.supplyProvided()) + 10) - Broodwar->self()->supplyUsed() <= 2 &&
 				Broodwar->self()->incompleteUnitCount(supplyProviderType) == 0 &&
 				free_mins >= 100)
 			{
@@ -140,24 +135,21 @@ void ExampleAIModule::onFrame()
 					IsOwned);
 				if (supplyBuilder)
 				{
-					if (supplyProviderType.isBuilding())
+					TilePosition targetBuildLocation = Broodwar->getBuildLocation(supplyProviderType, supplyBuilder->getTilePosition());
+					if (targetBuildLocation)
 					{
-						TilePosition targetBuildLocation = Broodwar->getBuildLocation(supplyProviderType, supplyBuilder->getTilePosition());
-						if (targetBuildLocation)
+						Broodwar->registerEvent([targetBuildLocation, supplyProviderType](Game*)
 						{
-							Broodwar->registerEvent([targetBuildLocation, supplyProviderType](Game*)
-							{
-								Broodwar->drawBoxMap(Position(targetBuildLocation),
-									Position(targetBuildLocation + supplyProviderType.tileSize()),
-									Colors::Blue);
-							},
-								nullptr,  // condition
-								supplyProviderType.buildTime() + 100);  // frames to run
+							Broodwar->drawBoxMap(Position(targetBuildLocation),
+								Position(targetBuildLocation + supplyProviderType.tileSize()),
+								Colors::Blue);
+						},
+							nullptr,  // condition
+							supplyProviderType.buildTime() + 100);  // frames to run
 
-							supplyBuilder->build(supplyProviderType, targetBuildLocation);
-							supply_inprogress += 1;
-							free_mins -= 100;
-						}
+						supplyBuilder->build(supplyProviderType, targetBuildLocation);
+						supply_inprogress += 1;
+						free_mins -= 100;
 					}
 				} // closure: supplyBuilder is valid
 			} // closure: insufficient supply
