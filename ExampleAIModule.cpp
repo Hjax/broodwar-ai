@@ -8,7 +8,7 @@ void ExampleAIModule::onStart()
 {
 	// Hello World!
 	Broodwar->sendText("Hello world!");
-
+	Broodwar->setLocalSpeed(0);
 	// init some variables
 	Barracks_timer = 0;
 	supply_timer = 0;
@@ -65,6 +65,7 @@ void ExampleAIModule::onEnd(bool isWinner)
 
 void ExampleAIModule::onFrame()
 {
+
 	int free_mins = Broodwar->self()->minerals();
 	Broodwar->drawTextScreen(200, 0, "FPS: %d", Broodwar->getFPS());
 	Broodwar->drawTextScreen(200, 20, "Average FPS: %f", Broodwar->getAverageFPS());
@@ -73,7 +74,9 @@ void ExampleAIModule::onFrame()
 	int scvs = Broodwar->self()->allUnitCount(UnitTypes::Terran_SCV);
 	Broodwar->drawTextScreen(200, 60, "Marines: %d", marines);
 	Broodwar->drawTextScreen(200, 80, "Workers: %d", scvs);
-
+	if (marines >= 14){
+		Broodwar->setLocalSpeed(-1);
+	}
 	if (Broodwar->isReplay() || Broodwar->isPaused() || !Broodwar->self())
 		return;
 	if (Broodwar->getFrameCount() % Broodwar->getLatencyFrames() != 0)
@@ -158,8 +161,9 @@ void ExampleAIModule::onFrame()
 		} // closure: failed to train idle unit
 
 
-		else if ((u->getType() == UnitTypes::Terran_Marine) && marines >= 10 && (!u->isAttacking() || !u->isStartingAttack()))
+		else if (u->getType() == UnitTypes::Terran_Marine)
 		{
+
 			Unit closestEnemy = NULL;
 			for (auto &e : Broodwar->enemy()->getUnits())
 			{
@@ -168,12 +172,11 @@ void ExampleAIModule::onFrame()
 					closestEnemy = e;
 				}
 			}
-			
-			if (u->getDistance(closestEnemy) < 10 && u->getHitPoints() < 16){
-				u->move(u->getClosestUnit(IsResourceDepot && IsAlly)->getPosition());
-			}
-			else {
+			if (marines > 10 && (u->isIdle() || u->getDistance(closestEnemy) > 5 && u->getHitPoints() < 50)){
 				u->attack(closestEnemy->getPosition(), false);
+			}
+			else if (u->getDistance(closestEnemy) < 5 && u->getHitPoints() < 50){
+				u->move(u->getClosestUnit(IsResourceDepot && IsAlly)->getPosition());
 			}
 		}
 		else if ((u->getType() == UnitTypes::Terran_Barracks) && u->isIdle() && free_mins >= 50){
