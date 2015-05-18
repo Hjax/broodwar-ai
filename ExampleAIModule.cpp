@@ -74,7 +74,7 @@ void ExampleAIModule::onFrame()
 	int scvs = Broodwar->self()->allUnitCount(UnitTypes::Terran_SCV);
 	Broodwar->drawTextScreen(200, 60, "Marines: %d", marines);
 	Broodwar->drawTextScreen(200, 80, "Workers: %d", scvs);
-	if (marines >= 14){
+	if (marines >= 17){
 		Broodwar->setLocalSpeed(-1);
 	}
 	if (Broodwar->isReplay() || Broodwar->isPaused() || !Broodwar->self())
@@ -172,10 +172,10 @@ void ExampleAIModule::onFrame()
 					closestEnemy = e;
 				}
 			}
-			if (marines > 10 && (u->isIdle() || u->getDistance(closestEnemy) > 5 && u->getHitPoints() < 50)){
+			if (marines > 10 && (u->isIdle() || (u->isMoving() && u->getDistance(closestEnemy) > 30 && u->getHitPoints() < 30))){
 				u->attack(closestEnemy->getPosition(), false);
 			}
-			else if (u->getDistance(closestEnemy) < 5 && u->getHitPoints() < 50){
+			else if (u->getDistance(closestEnemy) < 10 && u->getHitPoints() < 30){
 				u->move(u->getClosestUnit(IsResourceDepot && IsAlly)->getPosition());
 			}
 		}
