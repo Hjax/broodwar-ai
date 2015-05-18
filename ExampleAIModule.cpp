@@ -11,7 +11,7 @@ void ExampleAIModule::onStart()
 
 	// init some variables
 	Barracks_count = 0;
-	supply_inprogress = 0;
+	silly_timer = 0;
 
 	// Print the map name.
 	// BWAPI returns std::string when retrieving a string, don't forget to add .c_str() when printing!
@@ -66,10 +66,9 @@ void ExampleAIModule::onEnd(bool isWinner)
 void ExampleAIModule::onFrame()
 {
 	int free_mins = Broodwar->self()->minerals();
-	bool done = false;
+	bool built_supply = false;
 	Broodwar->drawTextScreen(200, 0, "FPS: %d", Broodwar->getFPS());
 	Broodwar->drawTextScreen(200, 40, "Barracks: %d", Barracks_count);
-	Broodwar->drawTextScreen(200, 60, "Supply: %d", supply_inprogress);
 	Broodwar->drawTextScreen(200, 20, "Average FPS: %f", Broodwar->getAverageFPS());
 	if (Broodwar->isReplay() || Broodwar->isPaused() || !Broodwar->self())
 		return;
@@ -101,7 +100,6 @@ void ExampleAIModule::onFrame()
 					u->build(UnitTypes::Terran_Barracks, buildPosition);
 					free_mins -= 150;
 					Barracks_count += 1;
-					done = true;
 				}
 				if (u->isIdle()){
 					if (u->isCarryingGas() || u->isCarryingMinerals())
@@ -126,9 +124,10 @@ void ExampleAIModule::onFrame()
 			}
 
 			UnitType supplyProviderType = u->getType().getRace().getSupplyProvider();
-			if (((supply_inprogress * supplyProviderType.supplyProvided()) + 10) - Broodwar->self()->supplyUsed() <= 2 &&
+			if (Broodwar->self()->supplyTotal() - Broodwar->self()->supplyUsed() <= 2 &&
 				Broodwar->self()->incompleteUnitCount(supplyProviderType) == 0 &&
-				free_mins >= 100)
+				free_mins >= 100 &&
+				Broodwar->getFrameCount() - silly_timer > 125)
 			{
 				Unit supplyBuilder = u->getClosestUnit(GetType == supplyProviderType.whatBuilds().first &&
 					(IsIdle || IsGatheringMinerals) &&
@@ -148,7 +147,8 @@ void ExampleAIModule::onFrame()
 							supplyProviderType.buildTime() + 100);  // frames to run
 
 						supplyBuilder->build(supplyProviderType, targetBuildLocation);
-						supply_inprogress += 1;
+						built_supply = true;
+						silly_timer = Broodwar->getFrameCount();
 						free_mins -= 100;
 					}
 				} // closure: supplyBuilder is valid
