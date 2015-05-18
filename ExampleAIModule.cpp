@@ -66,7 +66,6 @@ void ExampleAIModule::onEnd(bool isWinner)
 void ExampleAIModule::onFrame()
 {
 	int free_mins = Broodwar->self()->minerals();
-	bool built_supply = false;
 	Broodwar->drawTextScreen(200, 0, "FPS: %d", Broodwar->getFPS());
 	Broodwar->drawTextScreen(200, 40, "Barracks: %d", Barracks_count);
 	Broodwar->drawTextScreen(200, 20, "Average FPS: %f", Broodwar->getAverageFPS());
@@ -74,6 +73,12 @@ void ExampleAIModule::onFrame()
 		return;
 	if (Broodwar->getFrameCount() % Broodwar->getLatencyFrames() != 0)
 		return;
+	int marines = 0;
+	for (auto &m : Broodwar->self()->getUnits()){
+		if ((m->getType() == UnitTypes::Terran_Marine)){
+			marines += 1;
+		}
+	}
 	for (auto &u : Broodwar->self()->getUnits())
 	{
 		if (!u->exists())
@@ -127,7 +132,7 @@ void ExampleAIModule::onFrame()
 			if (Broodwar->self()->supplyTotal() - Broodwar->self()->supplyUsed() <= 2 &&
 				Broodwar->self()->incompleteUnitCount(supplyProviderType) == 0 &&
 				free_mins >= 100 &&
-				Broodwar->getFrameCount() - silly_timer > 125)
+				Broodwar->getFrameCount() - silly_timer > 150)
 			{
 				Unit supplyBuilder = u->getClosestUnit(GetType == supplyProviderType.whatBuilds().first &&
 					(IsIdle || IsGatheringMinerals) &&
@@ -147,7 +152,6 @@ void ExampleAIModule::onFrame()
 							supplyProviderType.buildTime() + 100);  // frames to run
 
 						supplyBuilder->build(supplyProviderType, targetBuildLocation);
-						built_supply = true;
 						silly_timer = Broodwar->getFrameCount();
 						free_mins -= 100;
 					}
@@ -156,8 +160,7 @@ void ExampleAIModule::onFrame()
 		} // closure: failed to train idle unit
 
 
-
-		else if ((u->getType() == UnitTypes::Terran_Marine) && u->isIdle())
+		else if ((u->getType() == UnitTypes::Terran_Marine) && u->isIdle() && marines >= 20)
 		{
 			Unit closestEnemy = NULL;
 			for (auto &e : Broodwar->enemy()->getUnits())
