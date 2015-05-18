@@ -26,7 +26,6 @@ public:
   virtual void onUnitComplete(BWAPI::Unit unit);
   // Everything below this line is safe to modify.
 private:
-  int Barracks_count;
   int Barracks_timer;
   int supply_timer;
 };

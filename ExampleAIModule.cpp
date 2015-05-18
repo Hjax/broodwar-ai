@@ -10,7 +10,6 @@ void ExampleAIModule::onStart()
 	Broodwar->sendText("Hello world!");
 
 	// init some variables
-	Barracks_count = 0;
 	Barracks_timer = 0;
 	supply_timer = 0;
 
@@ -68,19 +67,18 @@ void ExampleAIModule::onFrame()
 {
 	int free_mins = Broodwar->self()->minerals();
 	Broodwar->drawTextScreen(200, 0, "FPS: %d", Broodwar->getFPS());
-	Broodwar->drawTextScreen(200, 40, "Barracks: %d", Barracks_count);
 	Broodwar->drawTextScreen(200, 20, "Average FPS: %f", Broodwar->getAverageFPS());
-	Broodwar->drawTextScreen(200, 60, "APM: %f", Broodwar->getAPM());
+	Broodwar->drawTextScreen(200, 40, "APM: %f", Broodwar->getAPM());
 	if (Broodwar->isReplay() || Broodwar->isPaused() || !Broodwar->self())
 		return;
 	if (Broodwar->getFrameCount() % Broodwar->getLatencyFrames() != 0)
 		return;
-	int marines = 0;
-	for (auto &m : Broodwar->self()->getUnits()){
-		if ((m->getType() == UnitTypes::Terran_Marine)){
-			marines += 1;
-		}
-	}
+	int marines = Broodwar->self()->allUnitCount(UnitTypes::Terran_Marine);
+	int scvs = Broodwar->self()->allUnitCount(UnitTypes::Terran_SCV);
+
+	Broodwar->drawTextScreen(200, 60, "Marines: %d", marines);
+	Broodwar->drawTextScreen(200, 60, "Workers: %d", scvs);
+
 	for (auto &u : Broodwar->self()->getUnits())
 	{
 		if (!u->exists())
@@ -97,7 +95,7 @@ void ExampleAIModule::onFrame()
 
 		if (u->getType().isWorker()){
 			if (u->isIdle() || u->isGatheringMinerals()){
-				if ((Barracks_count < 3 || free_mins >= 500) &&
+				if ((Broodwar->self()->allUnitCount(UnitTypes::Terran_Barracks) < 3 || free_mins >= 500) &&
 					(free_mins >= UnitTypes::Terran_Barracks.mineralPrice()) &&
 					Barracks_timer + 200 < Broodwar->getFrameCount())
 				{
@@ -105,7 +103,6 @@ void ExampleAIModule::onFrame()
 					TilePosition buildPosition = Broodwar->getBuildLocation(BWAPI::UnitTypes::Terran_Barracks, u->getTilePosition());
 					u->build(UnitTypes::Terran_Barracks, buildPosition);
 					free_mins -= 150;
-					Barracks_count += 1;
 				}
 				if (u->isIdle()){
 					if (u->isCarryingGas() || u->isCarryingMinerals())
@@ -124,7 +121,7 @@ void ExampleAIModule::onFrame()
 		}
 		else if (u->getType() == UnitTypes::Terran_Command_Center)
 		{
-			if (u->isIdle() && free_mins >= 50){
+			if (u->isIdle() && free_mins >= 50 && scvs <= 30){
 				u->train(u->getType().getRace().getWorker());
 				free_mins -= 50;
 			}
