@@ -11,7 +11,8 @@ void ExampleAIModule::onStart()
 
 	// init some variables
 	Barracks_count = 0;
-	silly_timer = 0;
+	Barracks_timer = 0;
+	supply_timer = 0;
 
 	// Print the map name.
 	// BWAPI returns std::string when retrieving a string, don't forget to add .c_str() when printing!
@@ -69,6 +70,7 @@ void ExampleAIModule::onFrame()
 	Broodwar->drawTextScreen(200, 0, "FPS: %d", Broodwar->getFPS());
 	Broodwar->drawTextScreen(200, 40, "Barracks: %d", Barracks_count);
 	Broodwar->drawTextScreen(200, 20, "Average FPS: %f", Broodwar->getAverageFPS());
+	Broodwar->drawTextScreen(200, 60, "APM: %f", Broodwar->getAPM());
 	if (Broodwar->isReplay() || Broodwar->isPaused() || !Broodwar->self())
 		return;
 	if (Broodwar->getFrameCount() % Broodwar->getLatencyFrames() != 0)
@@ -95,12 +97,11 @@ void ExampleAIModule::onFrame()
 
 		if (u->getType().isWorker()){
 			if (u->isIdle() || u->isGatheringMinerals()){
-				static int lastChecked = 0;
 				if ((Barracks_count < 3 || free_mins >= 500) &&
 					(free_mins >= UnitTypes::Terran_Barracks.mineralPrice()) &&
-					lastChecked + 400 < Broodwar->getFrameCount())
+					Barracks_timer + 200 < Broodwar->getFrameCount())
 				{
-					lastChecked = Broodwar->getFrameCount();
+					Barracks_timer = Broodwar->getFrameCount();
 					TilePosition buildPosition = Broodwar->getBuildLocation(BWAPI::UnitTypes::Terran_Barracks, u->getTilePosition());
 					u->build(UnitTypes::Terran_Barracks, buildPosition);
 					free_mins -= 150;
@@ -132,7 +133,7 @@ void ExampleAIModule::onFrame()
 			if (Broodwar->self()->supplyTotal() - Broodwar->self()->supplyUsed() <= 2 &&
 				Broodwar->self()->incompleteUnitCount(supplyProviderType) == 0 &&
 				free_mins >= 100 &&
-				Broodwar->getFrameCount() - silly_timer > 150)
+				Broodwar->getFrameCount() - supply_timer > 150)
 			{
 				Unit supplyBuilder = u->getClosestUnit(GetType == supplyProviderType.whatBuilds().first &&
 					(IsIdle || IsGatheringMinerals) &&
@@ -152,7 +153,7 @@ void ExampleAIModule::onFrame()
 							supplyProviderType.buildTime() + 100);  // frames to run
 
 						supplyBuilder->build(supplyProviderType, targetBuildLocation);
-						silly_timer = Broodwar->getFrameCount();
+						supply_timer = Broodwar->getFrameCount();
 						free_mins -= 100;
 					}
 				} // closure: supplyBuilder is valid

@@ -27,5 +27,6 @@ public:
   // Everything below this line is safe to modify.
 private:
   int Barracks_count;
-  int silly_timer;
+  int Barracks_timer;
+  int supply_timer;
 };
