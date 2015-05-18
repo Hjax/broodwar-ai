@@ -110,7 +110,7 @@ void ExampleAIModule::onFrame()
 						u->returnCargo();
 					}
 					else if (!u->getPowerUp()){
-						if (!u->gather(u->getClosestUnit(IsMineralField || IsRefinery)))
+						if (!u->gather(u->getClosestUnit(UnitTypes::Terran_Command_Center)->getClosestUnit(IsMineralField || IsRefinery)))
 						{
 							Broodwar << Broodwar->getLastError() << std::endl;
 						}
