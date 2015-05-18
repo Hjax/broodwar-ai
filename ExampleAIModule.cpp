@@ -103,8 +103,7 @@ void ExampleAIModule::onFrame()
 
 		if (u->getType().isWorker()){
 			if (u->isIdle() || u->isGatheringMinerals()){
-				if ((Broodwar->self()->allUnitCount(UnitTypes::Terran_Command_Center) < ((scvs % 24) + 1)) &&
-					scvs < 60 &&
+				if ((Broodwar->self()->allUnitCount(UnitTypes::Terran_Command_Center) < ((scvs / 24) + 1)) &&
 					(free_mins >= UnitTypes::Terran_Command_Center.mineralPrice()) &&
 					expo_timer + 720 < Broodwar->getFrameCount())
 				{
@@ -139,7 +138,7 @@ void ExampleAIModule::onFrame()
 		}
 		else if (u->getType() == UnitTypes::Terran_Command_Center)
 		{
-			if (u->isIdle() && free_mins >= 50 && scvs < 24 * Broodwar->self()->allUnitCount(UnitTypes::Terran_Command_Center)){
+			if (u->isIdle() && scvs < 72 && free_mins >= 50 && scvs < 24 * Broodwar->self()->allUnitCount(UnitTypes::Terran_Command_Center)){
 				u->train(u->getType().getRace().getWorker());
 				free_mins -= 50;
 			}
