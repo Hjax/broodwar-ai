@@ -167,7 +167,7 @@ void ExampleAIModule::onFrame()
 					closestEnemy = e;
 				}
 			}
-			u->attack(closestEnemy, false);
+			u->attack(closestEnemy->getPosition(), false);
 		}
 		else if ((u->getType() == UnitTypes::Terran_Barracks) && u->isIdle() && free_mins >= 50){
 			u->train(UnitTypes::Terran_Marine);
