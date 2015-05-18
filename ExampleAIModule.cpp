@@ -74,8 +74,9 @@ void ExampleAIModule::onFrame()
 	int scvs = Broodwar->self()->allUnitCount(UnitTypes::Terran_SCV);
 	Broodwar->drawTextScreen(200, 60, "Marines: %d", marines);
 	Broodwar->drawTextScreen(200, 80, "Workers: %d", scvs);
-	if (marines >= 5){
-		Broodwar->setLocalSpeed(-1);
+	Broodwar->drawTextScreen(200, 100, "Next Depot %d", (Broodwar->self()->supplyUsed() - 2 * Broodwar->self()->allUnitCount(UnitTypes::Terran_Barracks)) + 2);
+	if (marines >= 30){
+		Broodwar->setLocalSpeed(0);
 	}
 	if (Broodwar->isReplay() || Broodwar->isPaused() || !Broodwar->self())
 		return;
@@ -130,7 +131,7 @@ void ExampleAIModule::onFrame()
 			}
 
 			UnitType supplyProviderType = u->getType().getRace().getSupplyProvider();
-			if (Broodwar->self()->supplyTotal() - Broodwar->self()->supplyUsed() <= ((2 * Broodwar->self()->allUnitCount(UnitTypes::Terran_Barracks)) + 1) &&
+			if (Broodwar->self()->supplyTotal() - Broodwar->self()->supplyUsed() <= ((2 * Broodwar->self()->allUnitCount(UnitTypes::Terran_Barracks)) + 2) &&
 				Broodwar->self()->incompleteUnitCount(supplyProviderType) == 0 &&
 				free_mins >= 100 &&
 				Broodwar->getFrameCount() - supply_timer > 150)
@@ -172,14 +173,9 @@ void ExampleAIModule::onFrame()
 					closestEnemy = e;
 				}
 			}
-			if (u->getDistance(closestEnemy) < 15 && u->getHitPoints() < 30){
-				u->move(Broodwar->getClosestUnit(u->getPosition(), IsResourceDepot && IsAlly)->getPosition());
-			}
-			else if ((u->isIdle())){
+
+			if ((u->isIdle() && marines >= 30)){
 				u->attack(closestEnemy->getPosition(), false);
-			}
-			else if (u->isMoving() && u->getDistance(closestEnemy) > 20 && u->getDistance(closestEnemy) < 100){
-				u->stop();
 			}
 
 		}
