@@ -122,6 +122,7 @@ void ExampleAIModule::onFrame()
 		{
 			if (u->isIdle() && free_mins >= 50){
 				u->train(u->getType().getRace().getWorker());
+				free_mins -= 50;
 			}
 			Position pos = u->getPosition(); // draw errors
 			Error lastErr = Broodwar->getLastError();
