@@ -28,4 +28,5 @@ public:
 private:
   int Barracks_timer;
   int supply_timer;
+  int attack_timer;
 };

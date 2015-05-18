@@ -11,6 +11,7 @@ void ExampleAIModule::onStart()
 	Broodwar->setLocalSpeed(0);
 	// init some variables
 	Barracks_timer = 0;
+	attack_timer = 0;
 	supply_timer = 0;
 
 	// Print the map name.
@@ -74,9 +75,9 @@ void ExampleAIModule::onFrame()
 	int scvs = Broodwar->self()->allUnitCount(UnitTypes::Terran_SCV);
 	Broodwar->drawTextScreen(200, 60, "Marines: %d", marines);
 	Broodwar->drawTextScreen(200, 80, "Workers: %d", scvs);
-	Broodwar->drawTextScreen(200, 100, "Next Depot %d", (Broodwar->self()->supplyUsed() - 2 * Broodwar->self()->allUnitCount(UnitTypes::Terran_Barracks)) + 2);
-	if (marines >= 30){
-		Broodwar->setLocalSpeed(0);
+	Broodwar->drawTextScreen(200, 100, "Next Depot %d", (Broodwar->self()->supplyTotal() - ((2 * Broodwar->self()->allUnitCount(UnitTypes::Terran_Barracks))) + 2));
+	if (marines >= 90){
+		Broodwar->setLocalSpeed(-1);
 	}
 	if (Broodwar->isReplay() || Broodwar->isPaused() || !Broodwar->self())
 		return;
@@ -173,9 +174,13 @@ void ExampleAIModule::onFrame()
 					closestEnemy = e;
 				}
 			}
-
-			if ((u->isIdle() && marines >= 30)){
+			if (u->getGroundWeaponCooldown() > 0 && (Broodwar->getFrameCount() - attack_timer) > 24 && closestEnemy->getDistance(u) < 50){
+				u->move(u->getClosestUnit(IsResourceDepot && IsAlly)->getPosition());
+				Broodwar->drawTextMap(u->getPosition(), "%c%s", Text::White, "Fleeing");   // action
+			}
+			else if ((marines >= 100 || closestEnemy->getDistance(u) < 200) && (Broodwar->getFrameCount() - attack_timer) > 24){
 				u->attack(closestEnemy->getPosition(), false);
+				Broodwar->drawTextMap(u->getPosition(), "%c%s", Text::White, "Attacking");
 			}
 
 		}
@@ -184,6 +189,9 @@ void ExampleAIModule::onFrame()
 			free_mins -= 50;
 		}
 	} // closure: unit iterator
+	if (Broodwar->getFrameCount() - attack_timer > 24){
+		attack_timer = Broodwar->getFrameCount();
+	}
 }
 
 void ExampleAIModule::onSendText(std::string text)
