@@ -13,6 +13,7 @@ void ExampleAIModule::onStart()
 	Barracks_timer = 0;
 	attack_timer = 0;
 	supply_timer = 0;
+	expo_timer = 0;
 
 	// Print the map name.
 	// BWAPI returns std::string when retrieving a string, don't forget to add .c_str() when printing!
@@ -75,8 +76,8 @@ void ExampleAIModule::onFrame()
 	int scvs = Broodwar->self()->allUnitCount(UnitTypes::Terran_SCV);
 	Broodwar->drawTextScreen(200, 60, "Marines: %d", marines);
 	Broodwar->drawTextScreen(200, 80, "Workers: %d", scvs);
-	Broodwar->drawTextScreen(200, 100, "Next Depot %d", (Broodwar->self()->supplyTotal() - ((2 * Broodwar->self()->allUnitCount(UnitTypes::Terran_Barracks))) + 2));
-	if (marines >= 90){
+	Broodwar->drawTextScreen(200, 100, "Next Depot %d", ((2 * Broodwar->self()->allUnitCount(UnitTypes::Terran_Barracks))) + 2);
+	if (marines >= 20){
 		Broodwar->setLocalSpeed(-1);
 	}
 	if (Broodwar->isReplay() || Broodwar->isPaused() || !Broodwar->self())
@@ -100,7 +101,7 @@ void ExampleAIModule::onFrame()
 
 		if (u->getType().isWorker()){
 			if (u->isIdle() || u->isGatheringMinerals()){
-				if ((Broodwar->self()->allUnitCount(UnitTypes::Terran_Barracks) < 3 || free_mins >= 500) &&
+				if ((Broodwar->self()->allUnitCount(UnitTypes::Terran_Barracks) < 3 || free_mins >= 800) &&
 					(free_mins >= UnitTypes::Terran_Barracks.mineralPrice()) &&
 					Barracks_timer + 200 < Broodwar->getFrameCount())
 				{
@@ -108,6 +109,15 @@ void ExampleAIModule::onFrame()
 					TilePosition buildPosition = Broodwar->getBuildLocation(BWAPI::UnitTypes::Terran_Barracks, u->getTilePosition());
 					u->build(UnitTypes::Terran_Barracks, buildPosition);
 					free_mins -= 150;
+				}
+				if ((Broodwar->self()->allUnitCount(UnitTypes::Terran_Command_Center) < ((scvs % 24) + 1)) &&
+					(free_mins >= UnitTypes::Terran_Command_Center.mineralPrice()) &&
+					expo_timer + 4000 < Broodwar->getFrameCount())
+				{
+					expo_timer = Broodwar->getFrameCount();
+					TilePosition buildPosition = Broodwar->getBuildLocation(BWAPI::UnitTypes::Terran_Command_Center, u->getTilePosition());
+					u->build(UnitTypes::Terran_Command_Center, buildPosition);
+					free_mins -= 400;
 				}
 				if (u->isIdle()){
 					if (u->isCarryingGas() || u->isCarryingMinerals())
@@ -178,7 +188,7 @@ void ExampleAIModule::onFrame()
 				u->move(u->getClosestUnit(IsResourceDepot && IsAlly)->getPosition());
 				Broodwar->drawTextMap(u->getPosition(), "%c%s", Text::White, "Fleeing");   // action
 			}
-			else if ((marines >= 100 || closestEnemy->getDistance(u) < 200) && (Broodwar->getFrameCount() - attack_timer) > 24){
+			else if ((marines >= 20 || closestEnemy->getDistance(u) < 200) && (Broodwar->getFrameCount() - attack_timer) > 24){
 				u->attack(closestEnemy->getPosition(), false);
 				Broodwar->drawTextMap(u->getPosition(), "%c%s", Text::White, "Attacking");
 			}
