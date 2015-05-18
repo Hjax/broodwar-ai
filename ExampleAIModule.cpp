@@ -74,7 +74,7 @@ void ExampleAIModule::onFrame()
 	int scvs = Broodwar->self()->allUnitCount(UnitTypes::Terran_SCV);
 	Broodwar->drawTextScreen(200, 60, "Marines: %d", marines);
 	Broodwar->drawTextScreen(200, 80, "Workers: %d", scvs);
-	if (marines >= 17){
+	if (marines >= 5){
 		Broodwar->setLocalSpeed(-1);
 	}
 	if (Broodwar->isReplay() || Broodwar->isPaused() || !Broodwar->self())
@@ -172,12 +172,16 @@ void ExampleAIModule::onFrame()
 					closestEnemy = e;
 				}
 			}
-			if (marines > 10 && (u->isIdle() || (u->isMoving() && u->getDistance(closestEnemy) > 30 && u->getHitPoints() < 30))){
+			if (u->getDistance(closestEnemy) < 15 && u->getHitPoints() < 30){
+				u->move(Broodwar->getClosestUnit(u->getPosition(), IsResourceDepot && IsAlly)->getPosition());
+			}
+			else if ((u->isIdle())){
 				u->attack(closestEnemy->getPosition(), false);
 			}
-			else if (u->getDistance(closestEnemy) < 10 && u->getHitPoints() < 30){
-				u->move(u->getClosestUnit(IsResourceDepot && IsAlly)->getPosition());
+			else if (u->isMoving() && u->getDistance(closestEnemy) > 20 && u->getDistance(closestEnemy) < 100){
+				u->stop();
 			}
+
 		}
 		else if ((u->getType() == UnitTypes::Terran_Barracks) && u->isIdle() && free_mins >= 50){
 			u->train(UnitTypes::Terran_Marine);
