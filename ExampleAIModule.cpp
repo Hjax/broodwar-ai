@@ -78,6 +78,8 @@ void ExampleAIModule::onFrame()
 	Broodwar->drawTextScreen(200, 80, "Workers: %d", scvs);
 	Broodwar->drawTextScreen(200, 100, "Next Depot %d", ((2 * Broodwar->self()->allUnitCount(UnitTypes::Terran_Barracks))) + 2);
 	Broodwar->drawTextScreen(100, 0, "Optimal CCs: %d", (scvs / 24) + 1);
+	Broodwar->drawTextScreen(100, 20, "Barracks Timer: %d", Barracks_timer + 200 - Broodwar->getFrameCount());
+	Broodwar->drawTextScreen(100, 40, "CC Timer: %d", expo_timer + 720 - Broodwar->getFrameCount());
 	
 	if (marines >= 20){
 		Broodwar->setLocalSpeed(-1);
@@ -107,10 +109,10 @@ void ExampleAIModule::onFrame()
 					(free_mins >= UnitTypes::Terran_Command_Center.mineralPrice()) &&
 					expo_timer + 720 < Broodwar->getFrameCount())
 				{
-					expo_timer = Broodwar->getFrameCount();
-					TilePosition buildPosition = Broodwar->getBuildLocation(BWAPI::UnitTypes::Terran_Command_Center, u->getTilePosition());
-					u->build(UnitTypes::Terran_Command_Center, buildPosition);
-					free_mins -= 400;
+//					expo_timer = Broodwar->getFrameCount();
+//					TilePosition buildPosition = Broodwar->getBuildLocation(BWAPI::UnitTypes::Terran_Command_Center, u->getTilePosition());
+//					u->build(UnitTypes::Terran_Command_Center, buildPosition);
+//					free_mins -= 400;
 				}
 				else if ((Broodwar->self()->allUnitCount(UnitTypes::Terran_Barracks) < 3 || free_mins >= 800) &&
 					(free_mins >= UnitTypes::Terran_Barracks.mineralPrice()) &&
@@ -203,6 +205,12 @@ void ExampleAIModule::onFrame()
 	} // closure: unit iterator
 	if (Broodwar->getFrameCount() - attack_timer > 24){
 		attack_timer = Broodwar->getFrameCount();
+	}
+	if (Broodwar->getFrameCount() - Barracks_timer > 200){
+		Barracks_timer = Broodwar->getFrameCount();
+	}
+	if (Broodwar->getFrameCount() - expo_timer > 720){
+		expo_timer = Broodwar->getFrameCount();
 	}
 }
 
