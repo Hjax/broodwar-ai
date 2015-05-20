@@ -102,9 +102,19 @@ void ExampleAIModule::onFrame()
 
 		if (!u->isCompleted() || u->isConstructing())
 			continue;
-
+		Unit closestEnemy = NULL;
+		for (auto &e : Broodwar->enemy()->getUnits())
+		{
+			if ((closestEnemy == NULL) || (e->getDistance(u) < closestEnemy->getDistance(u)))
+			{
+				closestEnemy = e;
+			}
+		}
 		if (u->getType().isWorker()){
-			if (u->isIdle() || u->isGatheringMinerals()){
+			if (u->getDistance(closestEnemy) < 250 && !closestEnemy->isCloaked() && !closestEnemy->isFlying()){
+				u->attack(closestEnemy->getPosition());
+			}
+			else if (u->isIdle() || u->isGatheringMinerals()){
 				if ((Broodwar->self()->allUnitCount(UnitTypes::Terran_Command_Center) < ((scvs / 24) + 1)) &&
 					(free_mins >= UnitTypes::Terran_Command_Center.mineralPrice()) &&
 					expo_timer + 720 < Broodwar->getFrameCount())
@@ -179,16 +189,7 @@ void ExampleAIModule::onFrame()
 
 		else if (u->getType() == UnitTypes::Terran_Marine)
 		{
-
-			Unit closestEnemy = NULL;
-			for (auto &e : Broodwar->enemy()->getUnits())
-			{
-				if ((closestEnemy == NULL) || (e->getDistance(u) < closestEnemy->getDistance(u)))
-				{
-					closestEnemy = e;
-				}
-			}
-			if (u->getGroundWeaponCooldown() > 0 && (Broodwar->getFrameCount() - attack_timer) > 24 && closestEnemy->getDistance(u) < 50){
+			if (u->getGroundWeaponCooldown() > 0 && (Broodwar->getFrameCount() - attack_timer) > 24 && closestEnemy->getDistance(u) < 50 && closestEnemy->canAttack()){
 				u->move(u->getClosestUnit(IsResourceDepot && IsAlly)->getPosition());
 				Broodwar->drawTextMap(u->getPosition(), "%c%s", Text::White, "Fleeing");   // action
 			}
