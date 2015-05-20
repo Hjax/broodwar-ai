@@ -124,7 +124,7 @@ void ExampleAIModule::onFrame()
 //					u->build(UnitTypes::Terran_Command_Center, buildPosition);
 //					free_mins -= 400;
 				}
-				else if ((Broodwar->self()->allUnitCount(UnitTypes::Terran_Barracks) < 3 || free_mins >= 800) &&
+				else if ((Broodwar->self()->allUnitCount(UnitTypes::Terran_Barracks) < 3 || free_mins >= 400) &&
 					(free_mins >= UnitTypes::Terran_Barracks.mineralPrice()) &&
 					Barracks_timer + 200 < Broodwar->getFrameCount())
 				{
@@ -193,7 +193,7 @@ void ExampleAIModule::onFrame()
 				u->move(u->getClosestUnit(IsResourceDepot && IsAlly)->getPosition());
 				Broodwar->drawTextMap(u->getPosition(), "%c%s", Text::White, "Fleeing");   // action
 			}
-			else if ((marines >= 20 || closestEnemy->getDistance(u) < 200) && (Broodwar->getFrameCount() - attack_timer) > 24){
+			else if ((marines >= 20 || closestEnemy->getDistance(u) < 200) && (Broodwar->getFrameCount() - attack_timer) > 24 && !(closestEnemy->isBurrowed() || closestEnemy->isCloaked()){
 				u->attack(closestEnemy->getPosition(), false);
 				Broodwar->drawTextMap(u->getPosition(), "%c%s", Text::White, "Attacking");
 			}
